@@ -28,25 +28,40 @@ with tab1:
 
 with tab2:
     st.subheader("Add Business Data")
-    data_type = st.selectbox("Data Type", ["Sales", "Marketing", "Customer Feedback", "Operational"])
     
-    # Simple JSON builder
-    st.write("Enter Data Content")
-    json_text = st.text_area("JSON Content", '{"region": "North", "value": 5000, "notes": "Q1 Target hit"}')
-    
-    if st.button("Save Record"):
-        try:
-            parsed_data = json.loads(json_text)
-            new_data = schemas.BusinessDataCreate(
-                data_type=data_type,
-                data=parsed_data
-            )
-            crud.create_business_data(db, new_data, user_id)
-            st.success("Record saved successfully!")
-            st.rerun()
-        except json.JSONDecodeError:
-            st.error("Invalid JSON format.")
-        except Exception as e:
-            st.error(f"Error: {e}")
+    with st.form("data_entry_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            data_type = st.selectbox("Data Type", ["Sales", "Marketing", "Customer Feedback", "Operational"])
+            region = st.selectbox("Region", ["North", "South", "East", "West", "International"])
+        with col2:
+            val = st.number_input("Value ($)", min_value=0.0, step=100.0, value=1000.0)
+            date = st.date_input("Date", datetime.now())
+
+        notes = st.text_area("Notes", "Quarterly review data...")
+        
+        submitted = st.form_submit_button("Save Record")
+
+        if submitted:
+            try:
+                # Construct structured JSON data
+                structured_data = {
+                    "region": region,
+                    "value": val,
+                    "date": str(date),
+                    "notes": notes,
+                    # Add a 'values' list for time-series compatibility if needed in future
+                    "values": [{"date": str(date), "value": val}] 
+                }
+                
+                new_data = schemas.BusinessDataCreate(
+                    data_type=data_type,
+                    data=structured_data
+                )
+                crud.create_business_data(db, new_data, user_id)
+                st.success("Record saved successfully!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error: {e}")
 
 db.close()
