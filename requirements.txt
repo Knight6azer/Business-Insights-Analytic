@@ -12,3 +12,5 @@ python-dotenv
 streamlit
 plotly
 watchdog
+email-validator
+bcrypt

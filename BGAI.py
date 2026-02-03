@@ -12,7 +12,13 @@ st.set_page_config(
 )
 
 # Initialize Database
-models.Base.metadata.create_all(bind=database.engine)
+# Initialize Database
+try:
+    models.Base.metadata.create_all(bind=database.engine)
+except Exception as e:
+    st.error(f"Database initialization failed: {e}")
+    # In cloud environments, maybe fallback or just log
+    pass
 
 # Premium CSS
 st.markdown("""
