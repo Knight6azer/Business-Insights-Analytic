@@ -1,15 +1,20 @@
 import streamlit as st
-import time
-from backend import models, database, auth, crud, schemas
-from sqlalchemy.orm import Session
-
-# Page Config
+# Page Config (Must be first)
 st.set_page_config(
     page_title="BGAI Predictive Analytics",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Imports with error handling
+try:
+    import time
+    from backend import models, database, auth, crud, schemas
+    from sqlalchemy.orm import Session
+except Exception as e:
+    st.error(f"Critical Startup Error (Imports): {e}")
+    st.stop()
 
 # Initialize Database
 # Initialize Database
