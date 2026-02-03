@@ -1,5 +1,7 @@
 import streamlit as st
-# Page Config (Must be first)
+import traceback
+
+# Page Config MUST be the first Streamlit command
 st.set_page_config(
     page_title="BGAI Predictive Analytics",
     page_icon="📈",
@@ -7,23 +9,23 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Imports with error handling
 try:
     import time
     from backend import models, database, auth, crud, schemas
     from sqlalchemy.orm import Session
-except Exception as e:
-    st.error(f"Critical Startup Error (Imports): {e}")
-    st.stop()
 
-# Initialize Database
-# Initialize Database
-try:
-    models.Base.metadata.create_all(bind=database.engine)
+    # Initialize Database
+    try:
+        models.Base.metadata.create_all(bind=database.engine)
+    except Exception as db_e:
+        # Log but don't stop if it's just a permission warning on ephemeral files
+        print(f"Database init warning: {db_e}")
+
 except Exception as e:
-    st.error(f"Database initialization failed: {e}")
-    # In cloud environments, maybe fallback or just log
-    pass
+    st.error("Using 'BGAI.py' as entry point.")
+    st.error("CRITICAL IMPORT ERROR:")
+    st.code(traceback.format_exc())
+    st.stop()
 
 # Premium CSS
 st.markdown("""
