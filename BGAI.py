@@ -1,158 +1,142 @@
 import streamlit as st
 import traceback
+import time
 
-# Page Config MUST be the first Streamlit command
+# Page config MUST be first Streamlit command
 st.set_page_config(
-    page_title="BGAI Predictive Analytics",
+    page_title="BGAI — Business Growth AI",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 try:
-    import time
     from backend import models, database, auth, crud, schemas
-    from sqlalchemy.orm import Session
-
-    # Initialize Database
-    try:
-        models.Base.metadata.create_all(bind=database.engine)
-    except Exception as db_e:
-        # Log but don't stop if it's just a permission warning on ephemeral files
-        print(f"Database init warning: {db_e}")
-
+    models.Base.metadata.create_all(bind=database.engine)
 except Exception as e:
-    st.error("Using 'BGAI.py' as entry point.")
-    st.error("CRITICAL IMPORT ERROR:")
+    st.error("CRITICAL IMPORT ERROR — check your backend setup.")
     st.code(traceback.format_exc())
     st.stop()
 
-# Premium CSS
+# ─────────────────────────────────────────────
+#  GLOBAL CSS — Premium Cyber Dark Theme
+# ─────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Global Reset & Typography */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Outfit', sans-serif !important;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
-    /* Main Background - Deep Space / Cyber Gradient */
-    .stApp {
-        background: radial-gradient(circle at top left, #2e1065 0%, #0f172a 50%, #000000 100%);
-        color: #e2e8f0;
-    }
+html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
 
-    /* --------------------------------------
-       🌌 NEON BUTTONS
-       -------------------------------------- */
-    .stButton>button {
-        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-        color: white;
-        border: 1px solid rgba(139, 92, 246, 0.5);
-        border-radius: 12px;
-        padding: 0.6rem 1.5rem;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-        box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
-        text-transform: uppercase;
-        font-size: 0.9rem;
-    }
+/* ── Background ─────────────────────────────── */
+.stApp {
+    background: radial-gradient(ellipse at top left, #1e0a3c 0%, #0f172a 45%, #020617 100%);
+    color: #e2e8f0;
+}
 
-    .stButton>button:hover {
-        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-        box-shadow: 0 0 25px rgba(139, 92, 246, 0.7);
-        transform: translateY(-2px);
-        border-color: #a78bfa;
-    }
-    
-    .stButton>button:active {
-        transform: translateY(1px);
-    }
+/* ── Sidebar ─────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0b0f1e 0%, #0f172a 100%);
+    border-right: 1px solid rgba(139,92,246,0.15);
+}
+[data-testid="stSidebarNav"] a { color: #94a3b8 !important; }
+[data-testid="stSidebarNav"] a:hover { color: #c084fc !important; }
 
-    /* --------------------------------------
-       🌑 DARK GLASSMORPHISM CARDS
-       -------------------------------------- */
-    /* Target expanders, forms, and custom containers */
-    div[data-testid="stExpander"], form, .css-1r6slb0, .stTabs, div[data-testid="stForm"] {
-        background: rgba(17, 24, 39, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-        padding: 1rem;
-    }
-    
-    /* Enhance text inside cards */
-    .stMarkdown, .stText, p, label {
-        color: #cbd5e1 !important;
-    }
+/* ── Buttons ──────────────────────────────────── */
+.stButton>button {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    color: #fff !important;
+    border: 1px solid rgba(139,92,246,0.5);
+    border-radius: 10px;
+    padding: 0.55rem 1.4rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 14px rgba(124,58,237,0.35);
+}
+.stButton>button:hover {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    box-shadow: 0 0 26px rgba(139,92,246,0.65);
+    transform: translateY(-2px);
+}
+.stButton>button:active { transform: translateY(1px); }
 
-    /* --------------------------------------
-       🔮 TYPOGRAPHY & TITLES
-       -------------------------------------- */
-    h1 {
-        background: linear-gradient(to right, #c084fc, #818cf8);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-        letter-spacing: -1px;
-        text-shadow: 0 0 20px rgba(192, 132, 252, 0.3);
-    }
-    
-    h2, h3 {
-        color: #e0e7ff !important;
-        font-weight: 700;
-    }
+/* ── Cards / Expanders ────────────────────────── */
+div[data-testid="stExpander"], div[data-testid="stForm"],
+div[data-baseweb="card"] {
+    background: rgba(15, 23, 42, 0.75) !important;
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(139,92,246,0.18);
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+}
 
-    /* --------------------------------------
-       🌌 SIDEBAR STYLE
-       -------------------------------------- */
-    [data-testid="stSidebar"] {
-        background-color: #0b1121;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    /* --------------------------------------
-       🔧 INPUT FIELDS (Dark Mode)
-       -------------------------------------- */
-    .stTextInput>div>div>input, .stNumberInput>div>div>input, .stSelectbox>div>div>div, .stDateInput>div>div>input {
-        background-color: rgba(30, 41, 59, 0.8) !important;
-        color: white !important;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transition: all 0.2s;
-    }
+/* ── Metric cards ─────────────────────────────── */
+[data-testid="stMetric"] {
+    background: rgba(17,24,39,0.70);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s;
+}
+[data-testid="stMetric"]:hover { transform: translateY(-3px); }
+[data-testid="stMetricLabel"] { color: #94a3b8 !important; font-size: 0.8rem; }
+[data-testid="stMetricValue"] { color: #c084fc !important; font-size: 1.9rem !important; font-weight: 700 !important; }
+[data-testid="stMetricDelta"] { font-size: 0.85rem !important; }
 
-    .stTextInput>div>div>input:focus, .stNumberInput>div>div>input:focus {
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
-    }
-    
-    /* Fix Selectbox text color */
-    div[data-baseweb="select"] > div {
-        background-color: rgba(30, 41, 59, 0.8) !important;
-        color: white !important;
-    }
-    
-    /* Tabs */
-    button[data-baseweb="tab"] {
-        color: #94a3b8;
-    }
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: #c084fc;
-        border-bottom-color: #c084fc;
-    }
+/* ── Typography ────────────────────────────────── */
+h1 {
+    background: linear-gradient(90deg, #c084fc, #818cf8, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800; letter-spacing: -1px;
+}
+h2, h3 { color: #e0e7ff !important; font-weight: 700; }
+p, label, li, .stMarkdown { color: #cbd5e1 !important; }
+
+/* ── Inputs ────────────────────────────────────── */
+.stTextInput>div>div>input,
+.stNumberInput>div>div>input,
+.stDateInput>div>div>input,
+.stTextArea textarea {
+    background-color: rgba(30,41,59,0.85) !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 9px;
+    transition: all 0.2s;
+}
+.stTextInput>div>div>input:focus,
+.stNumberInput>div>div>input:focus { border-color: #8b5cf6; box-shadow: 0 0 0 2px rgba(139,92,246,0.3); }
+
+div[data-baseweb="select"]>div {
+    background-color: rgba(30,41,59,0.85) !important;
+    color: #f1f5f9 !important;
+}
+
+/* ── Tabs ──────────────────────────────────────── */
+button[data-baseweb="tab"] { color: #64748b; font-weight: 500; }
+button[data-baseweb="tab"][aria-selected="true"] { color: #c084fc !important; border-bottom: 2px solid #c084fc !important; }
+
+/* ── Dataframe ─────────────────────────────────── */
+.stDataFrame { border-radius: 10px; overflow: hidden; }
+
+/* ── Divider ───────────────────────────────────── */
+hr { border-color: rgba(139,92,246,0.2); }
 </style>
 """, unsafe_allow_html=True)
 
-# Session State for Auth
-if 'authentication_status' not in st.session_state:
-    st.session_state['authentication_status'] = None
-if 'user' not in st.session_state:
-    st.session_state['user'] = None
+# ─────────────────────────────────────────────
+#  Session State Bootstrap
+# ─────────────────────────────────────────────
+for key, default in [
+    ("authentication_status", None),
+    ("user", None),
+]:
+    if key not in st.session_state:
+        st.session_state[key] = default
+
 
 def get_db():
     db = database.SessionLocal()
@@ -161,119 +145,226 @@ def get_db():
     finally:
         db.close()
 
+
+# ─────────────────────────────────────────────
+#  Login / Register Page
+# ─────────────────────────────────────────────
 def login_page():
-    st.title("Welcome to BGAI 🚀")
-    
-    tab1, tab2 = st.tabs(["Login", "Register"])
+    # Hero header
+    st.markdown("""
+    <div style="text-align:center; padding: 2.5rem 0 1rem;">
+        <div style="font-size:3.2rem; font-weight:800;
+                    background:linear-gradient(90deg,#c084fc,#818cf8,#38bdf8);
+                    -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+            BGAI
+        </div>
+        <div style="color:#94a3b8; font-size:1.05rem; margin-top:0.3rem; letter-spacing:1px;">
+            Business Growth AI &nbsp;·&nbsp; Predictive Analytics Platform
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    with tab1:
-        st.header("Login")
-        with st.form("login_form"):
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
-            submit_button = st.form_submit_button("Login")
+    # Feature pills
+    st.markdown("""
+    <div style="display:flex; justify-content:center; gap:0.7rem; flex-wrap:wrap; margin-bottom:2rem;">
+        <span style="background:rgba(124,58,237,0.2); color:#c084fc; border:1px solid rgba(124,58,237,0.4);
+                     border-radius:20px; padding:0.3rem 0.9rem; font-size:0.8rem;">📊 Analytics Engine</span>
+        <span style="background:rgba(79,70,229,0.2); color:#818cf8; border:1px solid rgba(79,70,229,0.4);
+                     border-radius:20px; padding:0.3rem 0.9rem; font-size:0.8rem;">🤖 ML Predictions</span>
+        <span style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);
+                     border-radius:20px; padding:0.3rem 0.9rem; font-size:0.8rem;">🔌 Integrations</span>
+        <span style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3);
+                     border-radius:20px; padding:0.3rem 0.9rem; font-size:0.8rem;">🔒 Secure Auth</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-            if submit_button:
-                db = next(get_db())
-                user = crud.get_user_by_email(db, email)
-                if user and auth.verify_password(password, user.password):
-                    st.session_state['authentication_status'] = True
-                    st.session_state['user'] = {"name": user.name, "email": user.email, "id": user.id}
-                    st.success(f"Welcome back, {user.name}!")
-                    time.sleep(1)
-                    st.rerun()
-                else:
-                    st.error("Incorrect email or password")
+    col_left, col_mid, col_right = st.columns([1, 2, 1])
+    with col_mid:
+        tab1, tab2 = st.tabs(["🔐  Login", "📝  Register"])
 
-    with tab2:
-        st.header("Register")
-        with st.form("register_form"):
-            new_name = st.text_input("Full Name")
-            new_email = st.text_input("Email")
-            new_password = st.text_input("Password", type="password")
-            confirm_password = st.text_input("Confirm Password", type="password")
-            register_button = st.form_submit_button("Register")
+        with tab1:
+            with st.form("login_form", clear_on_submit=False):
+                email    = st.text_input("Email Address", placeholder="you@company.com")
+                password = st.text_input("Password", type="password", placeholder="••••••••")
+                submit   = st.form_submit_button("Login →", use_container_width=True)
 
-            if register_button:
-                if new_password != confirm_password:
-                    st.error("Passwords do not match")
+            if submit:
+                if not email or not password:
+                    st.error("Please enter both email and password.")
                 else:
                     db = next(get_db())
-                    existing_user = crud.get_user_by_email(db, new_email)
-                    if existing_user:
-                        st.error("Email already registered")
+                    user = crud.get_user_by_email(db, email)
+                    if user and auth.verify_password(password, user.password):
+                        crud.update_last_login(db, user.id)
+                        st.session_state["authentication_status"] = True
+                        st.session_state["user"] = {
+                            "name":    user.name,
+                            "email":   user.email,
+                            "id":      user.id,
+                            "company": user.company or "",
+                            "role":    user.role,
+                        }
+                        with st.spinner("Authenticating…"):
+                            time.sleep(0.6)
+                        st.success(f"Welcome back, {user.name}! 🎉")
+                        time.sleep(0.8)
+                        st.rerun()
                     else:
-                        user_create = schemas.UserCreate(
-                            email=new_email, 
-                            password=new_password, 
-                            name=new_name,
-                            company="New Company"
-                        )
-                        crud.create_user(db, user_create)
-                        st.success("Registration successful! You can now login.")
+                        st.error("Incorrect email or password.")
 
+        with tab2:
+            with st.form("register_form", clear_on_submit=False):
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    new_name    = st.text_input("Full Name", placeholder="Jane Smith")
+                    new_email   = st.text_input("Email", placeholder="jane@company.com")
+                with col_b:
+                    company     = st.text_input("Company", placeholder="Acme Corp")
+                    new_pw      = st.text_input("Password", type="password", placeholder="Min 8 chars")
+                confirm_pw = st.text_input("Confirm Password", type="password", placeholder="Repeat password")
+                register   = st.form_submit_button("Create Account →", use_container_width=True)
+
+            if register:
+                if not all([new_name, new_email, new_pw, confirm_pw]):
+                    st.error("All fields are required.")
+                elif new_pw != confirm_pw:
+                    st.error("Passwords do not match.")
+                else:
+                    valid, msg = auth.validate_password_strength(new_pw)
+                    if not valid:
+                        st.warning(f"⚠️ {msg}")
+                    else:
+                        db = next(get_db())
+                        if crud.get_user_by_email(db, new_email):
+                            st.error("An account with this email already exists.")
+                        else:
+                            user_obj = schemas.UserCreate(
+                                email=new_email,
+                                password=new_pw,
+                                name=new_name,
+                                company=company,
+                            )
+                            crud.create_user(db, user_obj)
+                            st.success("✅ Account created! You can now login.")
+
+
+# ─────────────────────────────────────────────
+#  Home Page (post-login)
+# ─────────────────────────────────────────────
 def main_app():
-    user = st.session_state['user']
-    st.sidebar.title(f"Hello, {user['name']}")
-    
-    if st.sidebar.button("Logout"):
-        st.session_state['authentication_status'] = None
-        st.session_state['user'] = None
+    user = st.session_state["user"]
+
+    # Sidebar user card
+    st.sidebar.markdown(f"""
+    <div style="padding:1rem; border-radius:10px; background:rgba(124,58,237,0.12);
+                border:1px solid rgba(124,58,237,0.25); margin-bottom:1rem;">
+        <div style="font-size:1.1rem; font-weight:700; color:#c084fc;">👤 {user['name']}</div>
+        <div style="font-size:0.75rem; color:#64748b; margin-top:0.3rem;">{user['email']}</div>
+        <div style="font-size:0.75rem; color:#94a3b8;">{user.get('company','') or 'No company'}</div>
+        <div style="margin-top:0.5rem;">
+            <span style="background:rgba(16,185,129,0.15); color:#34d399;
+                         border-radius:12px; padding:0.15rem 0.6rem; font-size:0.75rem;">
+                ● {user.get('role','user').upper()}
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.sidebar.button("🚪  Logout", use_container_width=True):
+        st.session_state["authentication_status"] = None
+        st.session_state["user"] = None
         st.rerun()
-    
-    st.info("👈 Select a page from the sidebar to get started.")
-    
-    st.markdown("## 🚀 Enterprise Predictive Analytics Suite")
-    
-    st.markdown("""
-    ### System Architecture & Capabilities
-    
-    **BGAI (Business Growth AI)** is a state-of-the-art predictive intelligence platform designed to bridge the gap between raw data and actionable business strategy. Built on a robust Python ecosystem, it leverages advanced machine learning algorithms (Random Forests, Regressors) to provide real-time forecasting.
 
-    #### Core Modules
-    """)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        **1. Advanced Analytics Engine**
-        *   **Real-time Visualization**: Interactive, low-latency plotting using Plotly.
-        *   **Multi-Dimensional Analysis**: Slice data by region, type, or custom segments.
-        *   **Trend Detection**: Automatic anomaly detection and trend forecasting.
-        """)
-        
-        st.markdown("""
-        **2. ML & Prediction Layer**
-        *   **Automated Training**: Scikit-Learn pipelines that auto-tune hyperparameters.
-        *   **Confidence Scoring**: Every prediction comes with a confidence interval.
-        *   **Model Persistency**: Models are versioned and stored for reproducibility.
-        """)
-
-    with col2:
-        st.markdown("""
-        **3. CRM & Data Persistence**
-        *   **ACID Compliant**: Powered by SQLAlchemy and SQLite (scalable to PostgreSQL).
-        *   **Secure Auth**: PBKDF2 hashing with JWT session management.
-        *   **Validation**: Strict Pydantic schemas ensure data integrity at the ingress.
-        """)
-        
-        st.markdown("""
-        **4. Extensibility & Integration**
-        *   **REST API Ready**: Backend logic is decoupled (FastAPI pattern) for external consumption.
-        *   **Modular Architecture**: Plugin system for new data sources (Salesforce, HubSpot mockups).
-        """)
+    # Home content
+    st.title("BGAI — Enterprise Predictive Analytics Suite")
+    st.markdown(
+        "Navigate using the **sidebar** to access any module. "
+        "Use **Integrations → Generate Demo Data** to populate the system quickly."
+    )
 
     st.divider()
 
-    st.info("""
-    **👨‍💻 Engineering Note:**
-    This platform demonstrates a production-grade implementation of a data science web application. 
-    It adheres to **PEP 8** standards, utilizes **ORM** for database abstraction, and implements **Role-Based Access Control (RBAC)** patterns.
-    **Current Build**: v2.5.0-Stable | **Environment**: Production
-    """)
+    # Live KPI strip from DB
+    db = next(get_db())
+    stats = crud.get_user_stats(db, user["id"])
+    db.close()
 
-# Main Routing
-if st.session_state['authentication_status']:
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("📊 Total Predictions",  stats["total_predictions"])
+    c2.metric("📂 Data Records",       stats["total_data_records"])
+    c3.metric("🔌 Active Integrations", stats["active_integrations"])
+    c4.metric("🎯 Avg Confidence",
+              f"{stats['avg_confidence']*100:.1f}%" if stats["avg_confidence"] else "—")
+
+    st.divider()
+
+    # Architecture overview cards
+    st.markdown("### 🏗️ Platform Modules")
+    r1c1, r1c2 = st.columns(2)
+
+    with r1c1:
+        st.markdown("""
+        <div style="background:rgba(124,58,237,0.08); border:1px solid rgba(124,58,237,0.2);
+                    border-radius:12px; padding:1.2rem; height:100%;">
+            <div style="font-size:1.5rem;">📊</div>
+            <div style="font-weight:700; color:#c084fc; margin:0.4rem 0;">Analytics Engine</div>
+            <div style="color:#94a3b8; font-size:0.88rem;">
+                Multi-chart real-time visualization with Plotly. Pie, area, scatter &amp; heatmap views.
+                Date-range filters and CSV export built-in.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+    with r1c2:
+        st.markdown("""
+        <div style="background:rgba(79,70,229,0.08); border:1px solid rgba(79,70,229,0.2);
+                    border-radius:12px; padding:1.2rem; height:100%;">
+            <div style="font-size:1.5rem;">🤖</div>
+            <div style="font-weight:700; color:#818cf8; margin:0.4rem 0;">ML Prediction Layer</div>
+            <div style="color:#94a3b8; font-size:0.88rem;">
+                Linear, Polynomial, Random Forest &amp; Gradient Boosting models.
+                Real R², MAE, RMSE metrics with 5-step confidence-interval forecasts.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    r2c1, r2c2 = st.columns(2)
+
+    with r2c1:
+        st.markdown("""
+        <div style="background:rgba(56,189,248,0.07); border:1px solid rgba(56,189,248,0.2);
+                    border-radius:12px; padding:1.2rem; height:100%;">
+            <div style="font-size:1.5rem;">📂</div>
+            <div style="font-weight:700; color:#38bdf8; margin:0.4rem 0;">CRM &amp; Data Layer</div>
+            <div style="color:#94a3b8; font-size:0.88rem;">
+                ACID-compliant SQLAlchemy ORM. Structured JSON storage with inline editing,
+                per-record delete, and full CSV export capability.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+    with r2c2:
+        st.markdown("""
+        <div style="background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.2);
+                    border-radius:12px; padding:1.2rem; height:100%;">
+            <div style="font-size:1.5rem;">🔒</div>
+            <div style="font-weight:700; color:#34d399; margin:0.4rem 0;">Security &amp; Auth</div>
+            <div style="color:#94a3b8; font-size:0.88rem;">
+                PBKDF2-SHA256 password hashing, JWT session tokens, password-strength
+                enforcement, and role-based access control for all routes.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+    st.divider()
+    st.markdown("""
+    <div style="text-align:center; color:#475569; font-size:0.78rem;">
+        BGAI v3.0.0 &nbsp;·&nbsp; Python 3.13 &nbsp;·&nbsp; Streamlit &nbsp;·&nbsp; SQLAlchemy &nbsp;·&nbsp; Scikit-Learn
+        &nbsp;·&nbsp; Architected by Ujjwal Tiwari
+    </div>""", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────
+#  Router
+# ─────────────────────────────────────────────
+if st.session_state["authentication_status"]:
     main_app()
 else:
     login_page()

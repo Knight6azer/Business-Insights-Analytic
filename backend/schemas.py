@@ -1,28 +1,21 @@
-from pydantic import BaseModel, EmailStr
+"""
+schemas.py — Pydantic Data Transfer Objects for BGAI
+=====================================================
+All request / response validation shapes live here.
+Upgraded to Pydantic v2 configuration style.
+
+Author: Ujjwal Tiwari
+Version: 3.0.0
+"""
+
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-# User Schemas
-class UserBase(BaseModel):
-    email: EmailStr
-    name: str
 
-class UserCreate(UserBase):
-    password: str
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class User(UserBase):
-    id: int
-    company: Optional[str] = None
-    role: str
-    email_verified: bool
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
+# ---------------------------------------------------------------------------
+# Token
+# ---------------------------------------------------------------------------
 
 class Token(BaseModel):
     access_token: str
@@ -30,69 +23,156 @@ class Token(BaseModel):
     user_id: int
     name: str
 
-# Business Data Schemas
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# User
+# ---------------------------------------------------------------------------
+
+class UserBase(BaseModel):
+    email: EmailStr
+    name: str
+
+
+class UserCreate(UserBase):
+    password: str
+    company: Optional[str] = ""
+
+
+class UserUpdate(BaseModel):
+    """Partial update schema — all fields optional."""
+    name:    Optional[str] = None
+    company: Optional[str] = None
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class User(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id:             int
+    company:        Optional[str] = None
+    role:           str
+    email_verified: bool
+    last_login:     Optional[datetime] = None
+    created_at:     datetime
+
+
+# ---------------------------------------------------------------------------
+# Business Data
+# ---------------------------------------------------------------------------
+
 class BusinessDataBase(BaseModel):
-    data_type: str
-    data: Dict[str, Any]
+    data_type:   str
+    data:        Dict[str, Any]
+    description: Optional[str] = ""
+
 
 class BusinessDataCreate(BusinessDataBase):
     pass
 
+
 class BusinessData(BusinessDataBase):
-    id: int
-    user_id: int
-    timestamp: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+    id:         int
+    user_id:    int
+    timestamp:  datetime
     created_at: datetime
 
-    class Config:
-        orm_mode = True
 
-# Prediction Schemas
+# ---------------------------------------------------------------------------
+# Predictions
+# ---------------------------------------------------------------------------
+
+class MetricsSchema(BaseModel):
+    r2_score:    Optional[float] = None
+    mae:         Optional[float] = None
+    rmse:        Optional[float] = None
+    cv_r2_mean:  Optional[float] = None
+
+
 class PredictionBase(BaseModel):
-    name: Optional[str] = None
+    name:       Optional[str] = "Unnamed Prediction"
     model_type: str
     input_data: Dict[str, Any]
+
 
 class PredictionCreate(PredictionBase):
     pass
 
+
 class Prediction(PredictionBase):
-    id: int
-    user_id: int
-    output_data: Optional[Dict[str, Any]] = None
-    confidence: Optional[float] = None
-    status: str
-    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
+    id:             int
+    user_id:        int
+    output_data:    Optional[Dict[str, Any]] = None
+    confidence:     Optional[float] = None
+    accuracy_score: Optional[float] = None
+    status:         str
+    created_at:     datetime
 
-# Feedback Schemas
+
+# ---------------------------------------------------------------------------
+# Feedback
+# ---------------------------------------------------------------------------
+
 class FeedbackCreate(BaseModel):
-    type: str # rating, suggestion, issue
-    rating: Optional[int] = None
+    type:    str                    # rating | suggestion | bug
+    rating:  Optional[int] = None  # 1–5
     message: Optional[str] = None
 
+    @field_validator("rating")
+    @classmethod
+    def rating_range(cls, v):
+        if v is not None and not (1 <= v <= 5):
+            raise ValueError("Rating must be between 1 and 5")
+        return v
+
+
 class Feedback(FeedbackCreate):
-    id: int
-    user_id: int
-    status: str
+    model_config = ConfigDict(from_attributes=True)
+
+    id:         int
+    user_id:    int
+    status:     str
     created_at: datetime
 
-    class Config:
-        orm_mode = True
 
-# Integration Schemas
+# ---------------------------------------------------------------------------
+# Integration
+# ---------------------------------------------------------------------------
+
 class IntegrationCreate(BaseModel):
     service: str
-    config: Dict[str, Any]
+    config:  Dict[str, Any]
+
 
 class Integration(IntegrationCreate):
-    id: int
-    user_id: int
-    is_active: bool
+    model_config = ConfigDict(from_attributes=True)
+
+    id:         int
+    user_id:    int
+    is_active:  bool
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+
+# ---------------------------------------------------------------------------
+# Dashboard Summary (aggregated KPI response)
+# ---------------------------------------------------------------------------
+
+class DashboardSummary(BaseModel):
+    total_predictions:     int
+    total_data_records:    int
+    active_integrations:   int
+    avg_confidence:        float
+    completed_predictions: int
+    failed_predictions:    int
