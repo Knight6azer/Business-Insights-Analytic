@@ -1,6 +1,13 @@
 .env
 __pycache__/
 *.pyc
+*.pyo
 .idea/
 .vscode/
 venv/
+.venv/
+
+# SQLite database — never commit the live DB
+*.db
+*.sqlite
+*.sqlite3
